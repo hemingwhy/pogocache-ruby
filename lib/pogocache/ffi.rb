@@ -2,7 +2,7 @@ module Pogocache::FFI
   extend ::FFI::Library
 
   # ffi_lib ['pogocache', 'libpogocache.so', 'libpogocache.dylib']
-  ffi_lib File.dirname(__FILE__) + "/../../ext/pogocache/libpogocache.so"
+  ffi_lib File.dirname(__FILE__) + "/../../ext/pogocache/pogocache-ruby.so"
 
   EntryCb = callback(:entry_cb, [:int, :int64, :pointer, :size_t, :pointer, :size_t,
     :int64, :uint32, :uint64, :pointer, :pointer], :void)
@@ -44,6 +44,5 @@ module Pogocache::FFI
   attach_function :pogocache_store, [:pointer, :string, :size_t, :string, :size_t, StoreOpts.by_ref], :int
   attach_function :pogocache_load, [:pointer, :string, :size_t, LoadOpts.by_ref], :int
 
-  attach_function :init_load_buffer, [:size_t], :void
   attach_function :pogo_load, [:pointer, :string, :int64], :string
 end

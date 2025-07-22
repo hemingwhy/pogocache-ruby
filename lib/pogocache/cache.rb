@@ -8,7 +8,6 @@ class Pogocache::Cache
     @callbacks = []
 
     ObjectSpace.define_finalizer(self, self.class.finalizer(@ptr, Process.pid))
-    Pogocache::FFI.init_load_buffer(1024*1024)
   end
 
   def self.finalizer(ptr, pid)

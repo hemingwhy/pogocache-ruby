@@ -8,7 +8,7 @@ module Pogocache::LibraryLoader
       system_paths = %w[/usr/local/lib /opt/local/lib /usr/lib64 /usr/lib]
 
       ([inside_gem] + env_path + system_paths).map do |path|
-        File.join(path, "libpogocache.#{FFI::Platform::LIBSUFFIX}")
+        File.join(path, "pogocache.#{FFI::Platform::LIBSUFFIX}")
       end
     end
 

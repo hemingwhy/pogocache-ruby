@@ -4,11 +4,16 @@ require "bundler/gem_tasks"
 require "rspec/core/rake_task"
 require "standard/rake"
 require "yard"
+require "rake/extensiontask"
 
 RSpec::Core::RakeTask.new(:spec)
 YARD::Rake::YardocTask.new
 
 task default: %i[spec standard]
+
+Rake::ExtensionTask.new "pogocache" do |ext|
+  ext.lib_dir = "lib/pogocache"
+end
 
 # Custom tasks for building pogocache library
 namespace :pogocache do

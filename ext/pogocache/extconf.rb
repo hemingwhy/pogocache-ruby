@@ -1,6 +1,5 @@
-require 'mkmf'
+require "mkmf"
 
 # This should find ruby.h automatically
-have_library('pthread')
-create_makefile('pogocache-ruby')
-
+have_library("pthread")
+create_makefile("pogocache")
