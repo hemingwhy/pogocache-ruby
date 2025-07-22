@@ -38,22 +38,6 @@ class Pogocache::Cache
     decode(Pogocache::FFI.pogo_load(@ptr, key, key.bytesize))
   end
 
-  def get3(key)
-    # Define the callback
-    entry_cb, result, _ = new_entry_cb(key)
-    opts = Pogocache::FFI::LoadOpts.new
-    opts[:time] = 0
-    opts[:notouch] = true
-    opts[:entry] = entry_cb
-
-    res = Pogocache::FFI.pogocache_load(@ptr, key, key.bytesize, opts)
-
-    check_result(res)
-    return unless res == 3
-
-    Pogocache::Entry.new(**result)
-  end
-
   def delete(key)
     FFI::MemoryPointer.from_string(key.to_s)
     opts = Pogocache::FFI::DeleteOpts.new
