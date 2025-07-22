@@ -12,7 +12,7 @@ YARD::Rake::YardocTask.new
 task default: %i[spec standard]
 
 Rake::ExtensionTask.new "pogocache" do |ext|
-  ext.lib_dir = "lib/pogocache"
+  ext.lib_dir = "ext/pogocache"
 end
 
 # Custom tasks for building pogocache library
@@ -39,12 +39,13 @@ namespace :pogocache do
     end
   end
 
-  desc "Clean built libraries"
-  task :clean do
-    ext_dir = File.join(__dir__, "ext", "pogocache")
-    FileUtils.rm_f(Dir[File.join(ext_dir, "*.{so,dylib,o}")])
-  end
+end
+
+desc "Clean built libraries"
+task :clean do
+  ext_dir = File.join(__dir__, "ext", "pogocache")
+  FileUtils.rm_f(Dir[File.join(ext_dir, "*.{so,dylib,o}")])
 end
 
 # Build library before running tests
-task spec: "pogocache:build_lib"
+task spec: "compile"
