@@ -2,9 +2,50 @@
 
 require "bundler/gem_tasks"
 require "rspec/core/rake_task"
+require "standard/rake"
+require "yard"
 
 RSpec::Core::RakeTask.new(:spec)
-
-require "standard/rake"
+YARD::Rake::YardocTask.new
 
 task default: %i[spec standard]
+
+# Custom tasks for building pogocache library
+namespace :pogocache do
+  desc "Download and build pogocache library"
+  task :build_lib do
+    require_relative "lib/pogocache/platform"
+
+    ext_dir = File.join(__dir__, "ext", "pogocache")
+    FileUtils.mkdir_p(ext_dir)
+
+    Dir.chdir(ext_dir) do
+      unless File.exist?("pogocache.c")
+        puts "Downloading pogocache source..."
+        system("curl -L https://raw.githubusercontent.com/tidwall/pogocache/refs/heads/main/src/pogocache.c -o pogocache.c")
+        system("curl -L https://raw.githubusercontent.com/tidwall/pogocache/refs/heads/main/src/pogocache.h -o pogocache.h")
+      end
+
+      puts "Building pogocache library..."
+      lib_name = Pogocache::Platform.library_name
+      build_cmd = case Pogocache::Platform.os
+      when "darwin"
+        "clang -shared -fPIC -O3 -o #{lib_name} pogocache.c"
+      when "linux"
+        "gcc -shared -fPIC -O3 -o #{lib_name} pogocache.c -lpthread"
+      end
+
+      system(build_cmd) or raise "Failed to build pogocache library"
+      puts "Successfully built #{lib_name}"
+    end
+  end
+
+  desc "Clean built libraries"
+  task :clean do
+    ext_dir = File.join(__dir__, "ext", "pogocache")
+    FileUtils.rm_f(Dir[File.join(ext_dir, "*.{so,dylib,o}")])
+  end
+end
+
+# Build library before running tests
+task spec: "pogocache:build_lib"

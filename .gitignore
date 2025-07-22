@@ -1,11 +1,54 @@
-/.bundle/
-/.yardoc
-/_yardoc/
+*.gem
+*.rbc
+/.config
 /coverage/
-/doc/
+/InstalledFiles
 /pkg/
 /spec/reports/
+/spec/examples.txt
+/test/tmp/
+/test/version_tmp/
 /tmp/
 
-# rspec failure tracking
+# Used by dotenv library to load environment variables.
+.env
+
+# RSpec
 .rspec_status
+
+# Bundler
+/.bundle/
+/vendor/bundle
+/lib/bundler/man/
+Gemfile.lock
+.ruby-version
+.ruby-gemset
+.rvmrc
+
+# IDE files
+/.idea/
+/.vscode/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Build artifacts
+/ext/pogocache/*.o
+/ext/pogocache/*.so
+/ext/pogocache/*.dylib
+/ext/pogocache/*.dll
+/ext/pogocache/*.bundle
+/ext/pogocache/Makefile
+/ext/pogocache/mkmf.log
+
+# Documentation
+/.yardoc
+/_yardoc/
+/doc/
+/rdoc/
+
+# Temporary files
+*.tmp
+*.bak
+

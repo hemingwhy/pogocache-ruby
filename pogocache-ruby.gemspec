@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require_relative "lib/pogocache/ruby/version"
+require_relative "lib/pogocache/version"
 
 Gem::Specification.new do |spec|
   spec.name = "pogocache-ruby"
@@ -16,7 +16,7 @@ Gem::Specification.new do |spec|
   spec.metadata["allowed_push_host"] = nil
   spec.metadata["homepage_uri"] = spec.homepage
   spec.metadata["source_code_uri"] = spec.homepage
-    spec.metadata["changelog_uri"] = "#{spec.homepage}/change"
+  spec.metadata["changelog_uri"] = "#{spec.homepage}/change"
 
   # Specify which files should be added to the gem when it is released.
   # The `git ls-files -z` loads the files in the RubyGem that have been added into git.
@@ -33,6 +33,20 @@ Gem::Specification.new do |spec|
 
   # Uncomment to register a new dependency of your gem
   # spec.add_dependency "example-gem", "~> 1.0"
+  # Runtime dependencies
+  spec.add_runtime_dependency "ffi", "~> 1.15"
+  spec.add_runtime_dependency "base64", "~> 0.3.0"
+
+  # Development dependencies
+  spec.add_development_dependency "rake", "~> 13.0"
+  spec.add_development_dependency "rspec", "~> 3.12"
+  spec.add_development_dependency "rubocop", "~> 1.50"
+  spec.add_development_dependency "rubocop-rspec", "~> 2.20"
+  spec.add_development_dependency "yard", "~> 0.9"
+  spec.add_development_dependency "simplecov", "~> 0.22"
+
+  # Platform restrictions (pogocache only supports 64-bit Linux and macOS)
+  spec.platform = Gem::Platform::RUBY
 
   # For more information and examples about making a new gem, check out our
   # guide at: https://bundler.io/guides/creating_gem.html

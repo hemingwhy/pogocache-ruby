@@ -2,12 +2,21 @@
 
 source "https://rubygems.org"
 
-# Specify your gem's dependencies in pogocache-ruby.gemspec
+# Specify your gem's dependencies in pogocache.gemspec
 gemspec
 
-gem "irb"
-gem "rake", "~> 13.0"
+# Additional development dependencies
+group :development do
+  gem "pry"
+  gem "pry-byebug"
+  gem "guard"
+  gem "guard-rspec"
+  gem "ruby-lsp"
+end
 
-gem "rspec", "~> 3.0"
+# Platform-specific gems
+platforms :ruby do
+  gem "rake-compiler", "~> 1.2"
+end
 
-gem "standard", "~> 1.3"
+gem "debug", "~> 1.11"
