@@ -23,7 +23,6 @@ module Pogocache::LibraryLoader
       end
 
       search_paths = build_search_paths(lib_name)
-      puts search_paths
       begin
         ffi_lib_flags :now, :global
         ffi_lib(search_paths + ["pogocache"])

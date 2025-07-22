@@ -30,9 +30,9 @@ namespace :pogocache do
       lib_name = Pogocache::Platform.library_name
       build_cmd = case Pogocache::Platform.os
       when "darwin"
-        "clang -shared -fPIC -O3 -o #{lib_name} pogocache.c"
+        "clang -shared -fPIC -O3 -o #{lib_name} custom.c pogocache.c"
       when "linux"
-        "gcc -shared -fPIC -O3 -o #{lib_name} pogocache.c -lpthread"
+        "gcc -shared -fPIC -O3 -o #{lib_name} custom.c pogocache.c -lpthread"
       end
 
       system(build_cmd) or raise "Failed to build pogocache library"

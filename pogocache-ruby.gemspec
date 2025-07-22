@@ -35,7 +35,6 @@ Gem::Specification.new do |spec|
   # spec.add_dependency "example-gem", "~> 1.0"
   # Runtime dependencies
   spec.add_runtime_dependency "ffi", "~> 1.15"
-  spec.add_runtime_dependency "base64", "~> 0.3.0"
 
   # Development dependencies
   spec.add_development_dependency "rake", "~> 13.0"

@@ -1,8 +1,6 @@
 # frozen_string_literal: true
 
 require "ffi"
-require "debug"
-require "base64"
 require_relative "pogocache/version"
 require_relative "pogocache/errors"
 require_relative "pogocache/platform"
@@ -28,20 +26,6 @@ module Pogocache
   Entry = Struct.new(:key, :value, :expires, :flags, :cas)
 
   class << self
-    def check_result(rc, operation = "operation")
-      puts "operation returned: #{rc}"
-      case rc
-      when (0..)
-        true
-      when -1
-        raise CacheError, "#{operation} failed: memory allocation error"
-      when -2
-        raise CacheError, "#{operation} failed: invalid parameters"
-      else
-        raise CacheError, "#{operation} failed with code: #{rc}"
-      end
-    end
-
     # Create a new cache instance
     # @param options [Hash] Configuration options
     # @return [Pogocache::Cache] New cache instance
