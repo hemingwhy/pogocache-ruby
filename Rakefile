@@ -38,7 +38,6 @@ namespace :pogocache do
       puts "Successfully built #{lib_name}"
     end
   end
-
 end
 
 desc "Clean built libraries"
