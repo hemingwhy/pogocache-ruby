@@ -24,14 +24,17 @@ class Pogocache::Cache
 
   def set(key, value, ttl: nil)
     value = encode(value)
+    key = encode(key)
     Pogocache::FFI.pogocache_custom_store(@ptr, key, key.bytesize, value, value.bytesize, (ttl || 0) * 100_000)
   end
 
   def get(key)
+    key = encode(key)
     decode(Pogocache::FFI.pogocache_custom_load(@ptr, key, key.bytesize))
   end
 
   def delete(key)
+    key = encode(key)
     Pogocache::FFI.pogocache_custom_delete(@ptr, key, key.bytesize) == 7
   end
 
@@ -39,7 +42,6 @@ class Pogocache::Cache
     Pogocache::FFI.pogocache_now / 1_000_000_000
   end
 
-  # Ruby idioms: [] and []= for get/set
   def [](key)
     get(key)
   end
@@ -62,7 +64,7 @@ class Pogocache::Cache
   def size
     Pogocache::FFI.pogocache_custom_size(@ptr)
   end
-  
+
   def total
     Pogocache::FFI.pogocache_custom_total(@ptr)
   end
@@ -76,11 +78,11 @@ class Pogocache::Cache
     result_container = {}
     callback = proc do |shard, time, key_ptr, keylen, val_ptr, vallen,
                              expires, flags, cas, update_ptr, udata|
-      result_container[:key] = key_ptr.read_bytes(keylen),
-        result_container[:value] = decode(val_ptr.read_bytes(vallen)),
-        result_container[:expires] = expires,
-        result_container[:flags] = flags,
-        result_container[:cas] = cas
+      result_container[:key] = key_ptr.read_bytes(keylen)
+      result_container[:value] = decode(val_ptr.read_bytes(vallen))
+      result_container[:expires] = expires
+      result_container[:flags] = flags
+      result_container[:cas] = cas
     end
 
     CALLBACKS[callback_id] = callback
@@ -89,13 +91,8 @@ class Pogocache::Cache
   end
 
   def check_result(rc, operation = "operation")
-    case rc
-    when (0..)
+    if rc > 0
       true
-    when -1
-      raise CacheError, "#{operation} failed: memory allocation error"
-    when -2
-      raise CacheError, "#{operation} failed: invalid parameters"
     else
       raise CacheError, "#{operation} failed with code: #{rc}"
     end
@@ -106,8 +103,10 @@ class Pogocache::Cache
   end
 
   def decode(str)
-    return nil if str.nil? || str.empty?
+    return nil if str.null?
 
-    Marshal.load(str)
+    len = str.get_int(0)
+    packed = str.get_bytes(8, len)
+    Marshal.load(packed)
   end
 end

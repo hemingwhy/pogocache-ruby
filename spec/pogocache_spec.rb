@@ -19,10 +19,27 @@ RSpec.describe Pogocache do
       cache.set("name", "Adam")
       expect(cache.get("name")).to eq("Adam")
     end
+
     it "lets you save a object value" do
       cache = described_class.new
       cache.set("address", {street: "Abby Road 2", city: "London"})
       expect(cache.get("address")).to eq({street: "Abby Road 2", city: "London"})
+    end
+
+    it "stores arrays" do
+      cache = described_class.new
+      cache.set("array", [1, 2, 3, 4])
+      expect(cache.get("array")).to eq([1, 2, 3, 4])
+      cache.set("empty", [])
+      expect(cache.get("empty")).to eq([])
+      cache.set("big", Array.new(10_000))
+      expect(cache.get("big")).to eq(Array.new(10_000))
+    end
+
+    it "works with objects as keys" do
+      cache = described_class.new
+      cache.set([], "empty array")
+      expect(cache.get([])).to eq("empty array")
     end
 
     it "lets you save multiple values" do
@@ -77,14 +94,20 @@ RSpec.describe Pogocache do
     end
   end
 
+  def entrysize(k, v) = [Marshal.dump(k), Marshal.dump(v)].sum(&:bytesize)
+
   it "counts" do
     cache = described_class.new
     cache.set("a", "a value")
+    expect(cache.count).to eq(1)
     cache.set("b", "another value")
     cache.set("c", "a third value")
     expect(cache.count).to eq(3)
-    puts cache.size
-    puts cache.total
+    expect(cache.total).to eq(3)
+    cache.delete("a")
+    cache.set("d", "another third value")
+    expect(cache.count).to eq(3)
+    expect(cache.total).to eq(4)
+    expect(cache.size).to be_positive
   end
-
 end

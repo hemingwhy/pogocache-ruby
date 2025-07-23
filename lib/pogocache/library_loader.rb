@@ -3,7 +3,7 @@ module Pogocache::LibraryLoader
 
   class << self
     def library_search_paths
-      inside_gem = File.join(File.dirname(__FILE__), "..", "..", "ext")
+      inside_gem = File.join(File.dirname(__FILE__), "..", "..", "lib")
       env_path = [ENV["POGOCACHE_LIB_PATH"]].compact
       system_paths = %w[/usr/local/lib /opt/local/lib /usr/lib64 /usr/lib]
 

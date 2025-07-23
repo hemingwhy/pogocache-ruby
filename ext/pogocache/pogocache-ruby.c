@@ -10,7 +10,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define BUFFER_SIZE 4096
+#define BUFFER_SIZE 4096*1024
 
 static pthread_key_t buffer_key;
 static pthread_once_t key_once = PTHREAD_ONCE_INIT;
@@ -43,14 +43,8 @@ static void load_callback(int shard, int64_t time, const void *key,
     size_t keylen, const void *value, size_t valuelen, int64_t expires, 
     uint32_t flags, uint64_t cas, struct pogocache_update **update, 
     void *udata) {
-    sprintf(udata,"%.*s", (int)valuelen, (char *)value);
-}
-
-
-static bool delete_callback(int shard, int64_t time, const void *key, size_t keylen,
-        const void *value, size_t valuelen, int64_t expires, uint32_t flags,
-        uint64_t cas, void *udata) {
-    return true;
+    memcpy(udata, &valuelen, sizeof(size_t));
+    memcpy(udata+8, value, valuelen+sizeof(size_t));
 }
 
 void* pogocache_custom_load(struct pogocache *cache, const void *key, size_t keylen) {
@@ -61,6 +55,12 @@ void* pogocache_custom_load(struct pogocache *cache, const void *key, size_t key
     } else {
         return NULL;
     }
+}
+
+static bool delete_callback(int shard, int64_t time, const void *key, size_t keylen,
+        const void *value, size_t valuelen, int64_t expires, uint32_t flags,
+        uint64_t cas, void *udata) {
+    return true;
 }
 
 int pogocache_custom_delete(struct pogocache *cache, const void *key, size_t keylen) {
@@ -79,11 +79,11 @@ int pogocache_custom_count(struct pogocache *cache) {
 }
 
 int pogocache_custom_size(struct pogocache *cache) {
-    struct pogocache_size_opts copts = {};
+    struct pogocache_size_opts copts = {.entriesonly = true};
     return pogocache_size(cache, &copts);
 }
 
-int pogocache_custom_total(struct pogocache *cache) {
+uint64_t pogocache_custom_total(struct pogocache *cache) {
     struct pogocache_total_opts opts = {};
     return pogocache_total(cache, &opts);
 }
@@ -113,4 +113,8 @@ char** pogocache_custom_keys(struct pogocache *cache) {
     }
 
     return buffer;
+}
+
+void Init_pogocache(void) {
+    printf("loading pogo");
 }

@@ -34,11 +34,11 @@ Gemfile.lock
 .DS_Store
 
 # Build artifacts
-/ext/pogocache/*.o
-/ext/pogocache/*.so
-/ext/pogocache/*.dylib
-/ext/pogocache/*.dll
-/ext/pogocache/*.bundle
+/lib/pogocache/*.o
+/lib/pogocache/*.so
+/lib/pogocache/*.dylib
+/lib/pogocache/*.dll
+/lib/pogocache/*.bundle
 /ext/pogocache/Makefile
 /ext/pogocache/mkmf.log
 

@@ -9,7 +9,6 @@ require_relative "pogocache/ffi"
 require_relative "pogocache/configuration"
 require_relative "pogocache/cache"
 
-# Main module for pogocache Ruby bindings
 module Pogocache
   class Error < StandardError; end
 
