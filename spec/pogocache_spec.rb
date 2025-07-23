@@ -52,9 +52,9 @@ RSpec.describe Pogocache do
 
     it "ttl works" do
       cache = described_class.new
-      cache.set("test", :value, ttl: 5)
+      cache.set("test", :value, ttl: 1)
       expect(cache.get("test")).not_to be_nil
-      sleep 5 / 10e3
+      sleep 2 / 10e3
       expect(cache.get("test")).to be_nil
     end
   end
@@ -70,4 +70,21 @@ RSpec.describe Pogocache do
       expect(cache.get("nottobedeleted")).to eq("something")
     end
   end
+
+  describe "now" do
+    it "works" do
+      expect(described_class.now).not_to be_nil
+    end
+  end
+
+  it "counts" do
+    cache = described_class.new
+    cache.set("a", "a value")
+    cache.set("b", "another value")
+    cache.set("c", "a third value")
+    expect(cache.count).to eq(3)
+    puts cache.size
+    puts cache.total
+  end
+
 end

@@ -45,8 +45,8 @@ module Pogocache
       yield(configuration)
     end
 
-    def self.create(options = {})
-      Cache.new(options)
+    def now
+      Cache.now
     end
   end
 end

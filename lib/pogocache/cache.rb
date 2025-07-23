@@ -1,6 +1,4 @@
 class Pogocache::Cache
-  include Enumerable
-
   def initialize(options = {})
     @ptr = Pogocache::FFI.pogocache_new(options[:max_size] || 0)
     raise MemoryError, "Failed to create cache instance" if @ptr.null?
@@ -26,25 +24,19 @@ class Pogocache::Cache
 
   def set(key, value, ttl: nil)
     value = encode(value)
-    opts = Pogocache::FFI::StoreOpts.new
-    opts[:ttl] = ttl * 100_000 if ttl
-
-    result = Pogocache::FFI.pogocache_store(@ptr, key, key.bytesize, value, value.bytesize, opts)
-    check_result(result, "set operation")
+    Pogocache::FFI.pogocache_custom_store(@ptr, key, key.bytesize, value, value.bytesize, (ttl || 0) * 100_000)
   end
 
   def get(key)
-    decode(Pogocache::FFI.pogo_load(@ptr, key, key.bytesize))
+    decode(Pogocache::FFI.pogocache_custom_load(@ptr, key, key.bytesize))
   end
 
   def delete(key)
-    FFI::MemoryPointer.from_string(key.to_s)
-    opts = Pogocache::FFI::DeleteOpts.new
-    opts[:time] = 0
-    new_entry_cb(key)
-    opts[:entry] = proc { |a, b, c, d, e, f, g, h, i, j, k| true }
-    result = Pogocache::FFI.pogocache_delete(@ptr, key, key.bytesize, opts)
-    check_result(result, "delete operation")
+    Pogocache::FFI.pogocache_custom_delete(@ptr, key, key.bytesize) == 7
+  end
+
+  def self.now
+    Pogocache::FFI.pogocache_now / 1_000_000_000
   end
 
   # Ruby idioms: [] and []= for get/set
@@ -56,7 +48,6 @@ class Pogocache::Cache
     set(key, value)
   end
 
-  # Block-based operations
   def fetch(key, &block)
     value = get(key)
     return value.value if value
@@ -64,16 +55,21 @@ class Pogocache::Cache
     block&.call
   end
 
-  # Enumerable support
-  def each
-    return enum_for(:each) unless block_given?
+  def count
+    Pogocache::FFI.pogocache_custom_count(@ptr)
+  end
 
-    keys.each { |key| yield [key, get(key)] }
+  def size
+    Pogocache::FFI.pogocache_custom_size(@ptr)
+  end
+  
+  def total
+    Pogocache::FFI.pogocache_custom_total(@ptr)
   end
 
   private
 
-  CALLBACKS = {} # Prevent GC
+  CALLBACKS = {}
 
   def new_entry_cb(key)
     callback_id = "#{object_id}_#{key.hash}"

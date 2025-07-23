@@ -1,20 +1,13 @@
 module Pogocache::FFI
   extend ::FFI::Library
 
-  # ffi_lib ['pogocache', 'libpogocache.so', 'libpogocache.dylib']
   ffi_lib File.dirname(__FILE__) + "/../../ext/pogocache/pogocache.so"
 
   EntryCb = callback(:entry_cb, [:int, :int64, :pointer, :size_t, :pointer, :size_t,
     :int64, :uint32, :uint64, :pointer, :pointer], :void)
 
-  DeleteEntryCb = callback(:entry_cb, [:int, :int64, :pointer, :size_t, :pointer, :size_t,
+  StoreEntryCb = callback(:entry_cb, [:int, :int64, :pointer, :size_t, :pointer, :size_t,
     :int64, :uint32, :uint64, :pointer, :pointer], :bool)
-
-  class DeleteOpts < FFI::Struct
-    layout :time, :int64,
-      :entry, DeleteEntryCb,
-      :udata, :pointer
-  end
 
   class StoreOpts < FFI::Struct
     layout :time, :int64,
@@ -26,7 +19,7 @@ module Pogocache::FFI
       :casop, :bool,
       :nx, :bool,
       :lowmem, :bool,
-      :entry, DeleteEntryCb,
+      :entry, StoreEntryCb,
       :udata, :pointer
   end
 
@@ -40,9 +33,14 @@ module Pogocache::FFI
   attach_function :pogocache_new, [:int], :pointer
   attach_function :pogocache_free, [:pointer], :void
 
-  attach_function :pogocache_delete, [:pointer, :string, :size_t, DeleteOpts.by_ref], :int
-  attach_function :pogocache_store, [:pointer, :string, :size_t, :string, :size_t, StoreOpts.by_ref], :int
-  attach_function :pogocache_load, [:pointer, :string, :size_t, LoadOpts.by_ref], :int
+  attach_function :pogocache_custom_load, [:pointer, :string, :int64], :string
+  attach_function :pogocache_custom_delete, [:pointer, :string, :size_t], :int
+  attach_function :pogocache_custom_store, [:pointer, :string, :size_t, :string, :size_t, :int], :int
 
-  attach_function :pogo_load, [:pointer, :string, :int64], :string
+  attach_function :pogocache_custom_count, [:pointer], :size_t
+  attach_function :pogocache_custom_total, [:pointer], :uint64_t
+  attach_function :pogocache_custom_size, [:pointer], :size_t
+  attach_function :pogocache_now, [], :int64_t
+
+  attach_function :pogocache_custom_keys, [:pointer], :pointer
 end
