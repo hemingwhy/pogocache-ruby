@@ -1,13 +1,13 @@
 # frozen_string_literal: true
 
 require "ffi"
-require_relative "pogocache/version"
-require_relative "pogocache/errors"
-require_relative "pogocache/platform"
-require_relative "pogocache/library_loader"
-require_relative "pogocache/ffi"
-require_relative "pogocache/configuration"
-require_relative "pogocache/cache"
+require_relative "pogocache-ruby/version"
+require_relative "pogocache-ruby/errors"
+require_relative "pogocache-ruby/platform"
+require_relative "pogocache-ruby/library_loader"
+require_relative "pogocache-ruby/ffi"
+require_relative "pogocache-ruby/configuration"
+require_relative "pogocache-ruby/cache"
 
 module Pogocache
   class Error < StandardError; end

@@ -11,12 +11,12 @@ YARD::Rake::YardocTask.new
 
 task default: %i[spec standard]
 
-Rake::ExtensionTask.new "pogocache"
+Rake::ExtensionTask.new("pogocache-ruby")
 
 namespace :pogocache do
   desc "Download pogocache library"
   task :build_lib do
-    require_relative "lib/pogocache/platform"
+    require_relative "lib/pogocache-ruby/platform"
 
     ext_dir = File.join(__dir__, "ext", "pogocache")
     FileUtils.mkdir_p(ext_dir)

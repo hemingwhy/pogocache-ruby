@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require_relative "lib/pogocache/version"
+require_relative "lib/pogocache-ruby/version"
 
 Gem::Specification.new do |spec|
   spec.name = "pogocache-ruby"
@@ -31,7 +31,7 @@ Gem::Specification.new do |spec|
   spec.executables = spec.files.grep(%r{\Aexe/}) { |f| File.basename(f) }
   spec.require_paths = ["lib"]
 
-  spec.extensions = ["ext/pogocache/extconf.rb"]
+  spec.extensions = ["ext/pogocache-ruby/extconf.rb"]
 
   # Uncomment to register a new dependency of your gem
   # spec.add_dependency "example-gem", "~> 1.0"

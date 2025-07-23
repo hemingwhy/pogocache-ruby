@@ -1,7 +1,7 @@
 module Pogocache::FFI
   extend ::FFI::Library
 
-  ffi_lib File.dirname(__FILE__) + "/../pogocache.so"
+  ffi_lib File.dirname(__FILE__) + "/../pogocache-ruby.so"
 
   attach_function :pogocache_new, [:int], :pointer
   attach_function :pogocache_free, [:pointer], :void

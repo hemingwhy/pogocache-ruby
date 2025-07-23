@@ -115,6 +115,6 @@ char** pogocache_custom_keys(struct pogocache *cache) {
     return buffer;
 }
 
-void Init_pogocache(void) {
+void Init_pogocache_ruby(void) {
     printf("loading pogo");
 }
