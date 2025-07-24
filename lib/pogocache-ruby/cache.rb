@@ -80,7 +80,7 @@ class Pogocache::Cache
   def keys
     Pogocache::FFI.pogocache_custom_keys(@ptr)
       .read_array_of_type(:pointer, :read_pointer, count)
-      .map { |it| decode(it) }
+      .map { decode(it) }
   end
 
   def clear
