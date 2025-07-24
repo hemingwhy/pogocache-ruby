@@ -11,7 +11,7 @@ YARD::Rake::YardocTask.new
 
 task default: %i[spec standard]
 
-Rake::ExtensionTask.new("pogocache-ruby")
+Rake::ExtensionTask.new("pogocache_ruby")
 
 namespace :pogocache do
   desc "Download pogocache library"

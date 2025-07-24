@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require "ffi"
+require_relative "pogocache_ruby"
 require_relative "pogocache-ruby/version"
 require_relative "pogocache-ruby/errors"
 require_relative "pogocache-ruby/platform"
@@ -8,6 +9,9 @@ require_relative "pogocache-ruby/library_loader"
 require_relative "pogocache-ruby/ffi"
 require_relative "pogocache-ruby/configuration"
 require_relative "pogocache-ruby/cache"
+require_relative "pogocache-ruby/batch"
+# require "pogocache-ruby/pogocache-rfound compiled files inuby"
+#
 
 module Pogocache
   class Error < StandardError; end

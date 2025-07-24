@@ -12,6 +12,8 @@
 
 #define BUFFER_SIZE 4096*1024
 
+char g_buffer[BUFFER_SIZE];
+
 static pthread_key_t buffer_key;
 static pthread_once_t key_once = PTHREAD_ONCE_INIT;
 
@@ -26,6 +28,7 @@ static void make_key(void) {
 }
 
 static char* get_thread_buffer(void) {
+    // return g_buffer;
     pthread_once(&key_once, make_key);
     
     char *buffer = pthread_getspecific(buffer_key);
@@ -37,6 +40,17 @@ static char* get_thread_buffer(void) {
         pthread_setspecific(buffer_key, buffer);
     }
     return buffer;
+}
+
+void* pogocache_custom_sweep(struct pogocache *cache) {
+    struct pogocache_sweep_opts opts = {};
+    size_t swept;
+    size_t kept;
+    pogocache_sweep(cache,  &swept, &kept, &opts);
+    size_t *result = malloc(2*sizeof(size_t));
+    result[0] = swept;
+    result[1] = kept;
+    return result;
 }
 
 static void load_callback(int shard, int64_t time, const void *key,
@@ -58,8 +72,8 @@ void* pogocache_custom_load(struct pogocache *cache, const void *key, size_t key
 }
 
 static bool delete_callback(int shard, int64_t time, const void *key, size_t keylen,
-        const void *value, size_t valuelen, int64_t expires, uint32_t flags,
-        uint64_t cas, void *udata) {
+    const void *value, size_t valuelen, int64_t expires, uint32_t flags,
+    uint64_t cas, void *udata) {
     return true;
 }
 
@@ -89,7 +103,7 @@ uint64_t pogocache_custom_total(struct pogocache *cache) {
 }
 
 struct iter_buffer {
-    char* next;
+    size_t next_offset;
     char** buffer;
 };
 
@@ -97,24 +111,34 @@ int keys_callback(int shard, int64_t time, const void *key, size_t keylen,
     const void *value, size_t valuelen, int64_t expires, uint32_t flags,
     uint64_t cas, void *udata) {
     struct iter_buffer *ibuf = udata;
-    memcpy(udata, key, keylen);
-    ibuf->next = ibuf->next + (keylen + 1) * sizeof(char);
+    ibuf->buffer[ibuf->next_offset] = malloc(sizeof(char) * keylen + sizeof(size_t));
+    memcpy(ibuf->buffer[ibuf->next_offset], &keylen, sizeof(size_t));
+    memcpy(ibuf->buffer[ibuf->next_offset] + sizeof(size_t), key, keylen);
+    ibuf->next_offset++;
 }
 
 char** pogocache_custom_keys(struct pogocache *cache) {
-    size_t keycount = pogocache_custom_size(cache);
-    printf("%zu", keycount);
+    size_t keycount = pogocache_custom_count(cache);
     char **buffer;
     buffer = malloc(keycount * sizeof(size_t));
-    struct iter_buffer ibuf = {.next = NULL, .buffer = buffer};
-    struct pogocache_iter_opts iopts = {.entry = keys_callback, .udata = &buffer};
-    for(int i = 0; i < keycount; i++) {
-        // printf("%s", *ibuf.buffer);
-    }
-
+    struct iter_buffer ibuf = { .next_offset = 0, .buffer =  buffer };
+    struct pogocache_iter_opts iopts = {.entry = keys_callback, .udata = &ibuf};
+    pogocache_iter(cache, &iopts);
     return buffer;
 }
 
+void pogocache_custom_clear(struct pogocache *cache) {
+    struct pogocache_clear_opts copts = {};
+    pogocache_clear(cache, &copts);
+}
+
+struct pogocache* pogocache_custom_begin(struct pogocache *cache) {
+    return pogocache_begin(cache);
+}
+
+void pogocache_custom_end(struct pogocache *batch) {
+    pogocache_end(batch);    
+}
+
 void Init_pogocache_ruby(void) {
-    printf("loading pogo");
 }

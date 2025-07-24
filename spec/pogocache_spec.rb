@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-RSpec.describe Pogocache do
+RSpec.describe Pogocache::Cache do
   it "has a version number" do
     expect(Pogocache::VERSION).not_to be_nil
   end
@@ -70,9 +70,15 @@ RSpec.describe Pogocache do
     it "ttl works" do
       cache = described_class.new
       cache.set("test", :value, ttl: 1)
+      cache.set("test6", :value, ttl: nil)
+      cache.set("test5", :value, ttl: nil)
+      cache.set("test2", :value, ttl: 1)
+      cache.set("test3", :value, ttl: 1)
+      cache.set("test4", :value, ttl: 1)
       expect(cache.get("test")).not_to be_nil
       sleep 2 / 10e3
       expect(cache.get("test")).to be_nil
+      expect(cache.sweep).to eq([3, 2])
     end
   end
 
@@ -109,5 +115,70 @@ RSpec.describe Pogocache do
     expect(cache.count).to eq(3)
     expect(cache.total).to eq(4)
     expect(cache.size).to be_positive
+  end
+
+  describe "enumerator" do
+    it "works" do
+      cache = described_class.new
+      cache.set("a", "a value")
+      cache.set("b", "another value")
+      cache.set("c", "a third value")
+      cache.set("d", "another third value")
+      expect(cache.keys).to match_array(["a", "b", "c", "d"])
+
+      cache.keys do |k|
+        expect(cache.get(k)).not_to be_nil
+      end
+
+      cache.clear
+      expect(cache.count).to eq(0)
+      expect(cache.keys).to eq([])
+    end
+  end
+
+  describe "batch" do
+    it "works" do
+      cache = described_class.new
+      cache.batch do |b|
+        b.set("test 1", 1)
+        b.set("test 3", 4)
+        b.delete("test 1")
+        b.set("test 2", 4)
+      end
+      expect(cache.count).to eq(2)
+    end
+  end
+
+  describe "multi threading" do
+    it "does not raise an error" do
+      threads = []
+      2.times do
+        threads << Thread.new do
+          cache = described_class.new
+          100.times {
+            cache.set("thread_test", 212)
+            cache.get("thread_test")
+          }
+        end
+      end
+
+      threads.each(&:join)
+      expect(true).to eq(true)
+    end
+  end
+
+  describe "hash interface" do
+    it "works with [] and []=" do
+      cache = described_class.new
+      cache[{}] = {test: :test}
+      expect(cache[{}]).to eq({test: :test})
+    end
+
+    it "works with fetch" do
+      cache = described_class.new
+      cache[:test] = :test
+      expect(cache.fetch(:empty) { :fallback }).to eq(:fallback)
+      expect(cache.fetch(:test) { :fallback }).to eq(:test)
+    end
   end
 end

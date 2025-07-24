@@ -1,4 +1,6 @@
 class Pogocache::Cache
+  include Enumerable
+
   def initialize(options = {})
     @ptr = Pogocache::FFI.pogocache_new(options[:max_size] || 0)
     raise MemoryError, "Failed to create cache instance" if @ptr.null?
@@ -38,6 +40,12 @@ class Pogocache::Cache
     Pogocache::FFI.pogocache_custom_delete(@ptr, key, key.bytesize) == 7
   end
 
+  def batch(&block)
+    batch = Pogocache::Batch.new(Pogocache::FFI.pogocache_custom_begin(@ptr))
+    yield(batch)
+    Pogocache::FFI.pogocache_custom_end(batch.ptr)
+  end
+
   def self.now
     Pogocache::FFI.pogocache_now / 1_000_000_000
   end
@@ -52,7 +60,7 @@ class Pogocache::Cache
 
   def fetch(key, &block)
     value = get(key)
-    return value.value if value
+    return value if value
 
     block&.call
   end
@@ -69,34 +77,22 @@ class Pogocache::Cache
     Pogocache::FFI.pogocache_custom_total(@ptr)
   end
 
+  def keys
+    Pogocache::FFI.pogocache_custom_keys(@ptr)
+      .read_array_of_type(:pointer, :read_pointer, count)
+      .map { |it| decode(it) }
+  end
+
+  def clear
+    Pogocache::FFI.pogocache_custom_clear(@ptr)
+  end
+
+  def sweep
+    res = Pogocache::FFI.pogocache_custom_sweep(@ptr)
+    [res.get_int(0), res.get_int(8)]
+  end
+
   private
-
-  CALLBACKS = {}
-
-  def new_entry_cb(key)
-    callback_id = "#{object_id}_#{key.hash}"
-    result_container = {}
-    callback = proc do |shard, time, key_ptr, keylen, val_ptr, vallen,
-                             expires, flags, cas, update_ptr, udata|
-      result_container[:key] = key_ptr.read_bytes(keylen)
-      result_container[:value] = decode(val_ptr.read_bytes(vallen))
-      result_container[:expires] = expires
-      result_container[:flags] = flags
-      result_container[:cas] = cas
-    end
-
-    CALLBACKS[callback_id] = callback
-
-    [callback, result_container, callback_id]
-  end
-
-  def check_result(rc, operation = "operation")
-    if rc > 0
-      true
-    else
-      raise CacheError, "#{operation} failed with code: #{rc}"
-    end
-  end
 
   def encode(obj)
     Marshal.dump(obj)
