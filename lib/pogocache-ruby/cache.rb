@@ -5,8 +5,6 @@ class Pogocache::Cache
     @ptr = Pogocache::FFI.pogocache_new(options[:max_size] || 0)
     raise MemoryError, "Failed to create cache instance" if @ptr.null?
 
-    @callbacks = []
-
     ObjectSpace.define_finalizer(self, self.class.finalizer(@ptr, Process.pid))
   end
 
