@@ -39,7 +39,7 @@ module Pogocache
         base = "pogocache_ruby"
         case os
         when "darwin"
-          "#{base}.dylib"
+          "#{base}.bundle"
         when "linux"
           "#{base}.so"
         else
