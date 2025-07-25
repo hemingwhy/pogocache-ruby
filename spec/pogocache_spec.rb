@@ -9,7 +9,6 @@ RSpec.describe Pogocache::Cache do
     it "creates a new cache instance" do
       cache = described_class.new
       expect(cache).to be_a(Pogocache::Cache)
-      cache.close
     end
   end
 
@@ -69,16 +68,16 @@ RSpec.describe Pogocache::Cache do
 
     it "ttl works" do
       cache = described_class.new
-      cache.set("test", :value, ttl: 1)
+      cache.set("test", :value, ttl: 300_000)
       cache.set("test6", :value, ttl: nil)
       cache.set("test5", :value, ttl: nil)
       cache.set("test2", :value, ttl: 1)
       cache.set("test3", :value, ttl: 1)
       cache.set("test4", :value, ttl: 1)
       expect(cache.get("test")).not_to be_nil
-      sleep 2 / 10e3
+      sleep 4 / 10e3
       expect(cache.get("test")).to be_nil
-      expect(cache.sweep).to eq([3, 2])
+      expect(cache.sweep).to eq(swept: 3, kept: 2)
     end
   end
 
@@ -94,14 +93,6 @@ RSpec.describe Pogocache::Cache do
     end
   end
 
-  describe "now" do
-    it "works" do
-      expect(described_class.now).not_to be_nil
-    end
-  end
-
-  def entrysize(k, v) = [Marshal.dump(k), Marshal.dump(v)].sum(&:bytesize)
-
   it "counts" do
     cache = described_class.new
     cache.set("a", "a value")
@@ -109,12 +100,10 @@ RSpec.describe Pogocache::Cache do
     cache.set("b", "another value")
     cache.set("c", "a third value")
     expect(cache.count).to eq(3)
-    expect(cache.total).to eq(3)
     cache.delete("a")
     cache.set("d", "another third value")
     expect(cache.count).to eq(3)
-    expect(cache.total).to eq(4)
-    expect(cache.size).to be_positive
+    expect(cache.bytesize).to be_positive
   end
 
   describe "enumerator" do
@@ -124,28 +113,10 @@ RSpec.describe Pogocache::Cache do
       cache.set("b", "another value")
       cache.set("c", "a third value")
       cache.set("d", "another third value")
-      expect(cache.keys).to match_array(["a", "b", "c", "d"])
-
-      cache.keys do |k|
-        expect(cache.get(k)).not_to be_nil
-      end
-
+      expect(cache.each { |k, _v| k }).to match_array(%w[a b c d]) # standard:disable Lint/Void
       cache.clear
       expect(cache.count).to eq(0)
-      expect(cache.keys).to eq([])
-    end
-  end
-
-  describe "batch" do
-    it "works" do
-      cache = described_class.new
-      cache.batch do |b|
-        b.set("test 1", 1)
-        b.set("test 3", 4)
-        b.delete("test 1")
-        b.set("test 2", 4)
-      end
-      expect(cache.count).to eq(2)
+      expect(cache.each).to be_empty
     end
   end
 
@@ -179,6 +150,26 @@ RSpec.describe Pogocache::Cache do
       cache[:test] = :test
       expect(cache.fetch(:empty) { :fallback }).to eq(:fallback)
       expect(cache.fetch(:test) { :fallback }).to eq(:test)
+    end
+  end
+
+  describe ".entry" do
+    it "has all the keys" do
+      cache = described_class.new
+      cache[:test] = {an: :entry}
+      entry = cache.entry(:test)
+      expect(entry.keys).to match_array(%i[cas expires flags key shard time value])
+    end
+  end
+
+  describe "configuration" do
+    it "works" do
+      Pogocache.configure do
+        it.default_opts = {nshards: 1010}
+      end
+
+      cache = described_class.new
+      expect(cache.nshards).to eq(1010)
     end
   end
 end

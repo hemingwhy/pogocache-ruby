@@ -1,60 +1,25 @@
 class Pogocache::Cache
-  include Enumerable
-
   def initialize(options = {})
-    @ptr = Pogocache::FFI.pogocache_custom_new(
-      options[:usecas] || false,
-      options[:nosixpack] || false,
-      options[:noevict] || false,
-      options[:allowshrink] || false,
-      options[:usethreadbatch] || false,
-      options[:nshards] || 65536,
-      options[:loadfactor] || 75,
-      options[:seed] || 0
-    )
-    raise MemoryError, "Failed to create cache instance" if @ptr.null?
-
-    ObjectSpace.define_finalizer(self, self.class.finalizer(@ptr, Process.pid))
+    @extension = Pogocache::Extension.new(Pogocache.configuration.default_opts.merge(options))
   end
 
-  def self.finalizer(ptr, pid)
-    proc do
-      Pogocache::FFI.pogocache_free(ptr) if Process.pid == pid
-    end
-  end
-
-  def close
-    return unless @ptr && !@ptr.null?
-
-    Pogocache::FFI.pogocache_free(@ptr)
-    @ptr = nil
-    ObjectSpace.undefine_finalizer(self)
-  end
-
-  def set(key, value, ttl: nil)
-    value = encode(value)
-    key = encode(key)
-    Pogocache::FFI.pogocache_custom_store(@ptr, key, key.bytesize, value, value.bytesize, (ttl || 0) * 100_000)
+  def set(key, value, options = {})
+    @extension.store(encode(key), encode(value), options)
   end
 
   def get(key)
-    key = encode(key)
-    decode(Pogocache::FFI.pogocache_custom_load(@ptr, key, key.bytesize))
+    decode(@extension.load(encode(key))&.dig(:value))
+  end
+
+  def entry(key)
+    @extension.load(encode(key))&.tap do
+      it[:key] = decode(it[:key])
+      it[:value] = decode(it[:value])
+    end
   end
 
   def delete(key)
-    key = encode(key)
-    Pogocache::FFI.pogocache_custom_delete(@ptr, key, key.bytesize) == 7
-  end
-
-  def batch(&block)
-    batch = Pogocache::Batch.new(Pogocache::FFI.pogocache_custom_begin(@ptr))
-    yield(batch)
-    Pogocache::FFI.pogocache_custom_end(batch.ptr)
-  end
-
-  def self.now
-    Pogocache::FFI.pogocache_now / 1_000_000_000
+    @extension.delete(encode(key))
   end
 
   def [](key)
@@ -73,31 +38,37 @@ class Pogocache::Cache
   end
 
   def count
-    Pogocache::FFI.pogocache_custom_count(@ptr)
+    @extension.count
   end
+  alias_method(:size, :count)
 
-  def size
-    Pogocache::FFI.pogocache_custom_size(@ptr)
-  end
-
-  def total
-    Pogocache::FFI.pogocache_custom_total(@ptr)
-  end
-
-  def keys
-    Pogocache::FFI.pogocache_custom_keys(@ptr)
-      .read_array_of_type(:pointer, :read_pointer, count)
-      .map { decode(it) }
+  def bytesize
+    @extension.size
   end
 
   def clear
-    Pogocache::FFI.pogocache_custom_clear(@ptr)
+    @extension.clear
   end
 
   def sweep
-    res = Pogocache::FFI.pogocache_custom_sweep(@ptr)
-    [res.get_int(0), res.get_int(8)]
+    @extension.sweep
   end
+
+  def each(opts = {}, &block)
+    if block_given?
+      retval = []
+      @extension.each(opts) do
+        retval << yield(decode(it[:key]), decode(it[:value]))
+
+        Pogocache::ITER_CONTINUE # standard:disable Lint/Void
+      end
+      retval
+    else
+      @extension.each(opts)
+    end
+  end
+
+  def nshards = @extension.nshards
 
   private
 
@@ -106,10 +77,8 @@ class Pogocache::Cache
   end
 
   def decode(str)
-    return nil if str.null?
+    return nil if str.nil? || str.empty?
 
-    len = str.get_int(0)
-    packed = str.get_bytes(8, len)
-    Marshal.load(packed)
+    Marshal.load(str)
   end
 end
