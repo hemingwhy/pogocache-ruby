@@ -10,36 +10,24 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define BUFFER_SIZE 4096*1024
+#define DEFAULT_BUFFER_SIZE 4096*1024
 
-char g_buffer[BUFFER_SIZE];
+char **g_buffer;
+bool initialized = false;
 
-static pthread_key_t buffer_key;
-static pthread_once_t key_once = PTHREAD_ONCE_INIT;
-
-static void buffer_destructor(void *buffer) {
-    if (buffer) {
-        free(buffer);
-    }
-}
-
-static void make_key(void) {
-    pthread_key_create(&buffer_key, buffer_destructor);
-}
-
-static char* get_thread_buffer(void) {
-    // return g_buffer;
-    pthread_once(&key_once, make_key);
-    
-    char *buffer = pthread_getspecific(buffer_key);
-    if (!buffer) {
-        buffer = malloc(BUFFER_SIZE);
-        if (!buffer) {
-            rb_raise(rb_eNoMemError, "Failed to allocate thread buffer");
-        }
-        pthread_setspecific(buffer_key, buffer);
-    }
-    return buffer;
+struct pogocache* pogocache_custom_new(bool usecas, bool nosixpack, bool noevict, bool allowshrink,
+                                       bool usethreadbatch, int nshards, int loadfactor, uint64_t seed) {
+    struct pogocache_opts opts = {
+        .usecas = usecas,
+        .nosixpack = nosixpack,
+        .noevict = noevict,
+        .allowshrink = allowshrink,
+        .usethreadbatch = usethreadbatch,
+        .nshards = nshards,
+        .loadfactor = loadfactor,
+        .seed = seed
+    };
+    return pogocache_new(&opts);
 }
 
 void* pogocache_custom_sweep(struct pogocache *cache) {
@@ -62,7 +50,7 @@ static void load_callback(int shard, int64_t time, const void *key,
 }
 
 void* pogocache_custom_load(struct pogocache *cache, const void *key, size_t keylen) {
-    void *load_buffer = get_thread_buffer();
+    void *load_buffer = g_buffer;
     struct pogocache_load_opts lopts = { .entry = load_callback, .udata = load_buffer };
     if(pogocache_load(cache, key, keylen, &lopts) == POGOCACHE_FOUND) {
         return load_buffer;
@@ -115,6 +103,7 @@ int keys_callback(int shard, int64_t time, const void *key, size_t keylen,
     memcpy(ibuf->buffer[ibuf->next_offset], &keylen, sizeof(size_t));
     memcpy(ibuf->buffer[ibuf->next_offset] + sizeof(size_t), key, keylen);
     ibuf->next_offset++;
+    return 0; // POGOCACHE_ITER_NEXT;
 }
 
 char** pogocache_custom_keys(struct pogocache *cache) {
@@ -139,6 +128,25 @@ struct pogocache* pogocache_custom_begin(struct pogocache *cache) {
 void pogocache_custom_end(struct pogocache *batch) {
     pogocache_end(batch);    
 }
+static VALUE initialize_extension(VALUE self, VALUE options) {
+    if (initialized) return Qnil;
+    size_t buffer_size = DEFAULT_BUFFER_SIZE;
+    
+    if (!NIL_P(options)) {
+        VALUE buf_size = rb_hash_aref(options, rb_str_new_cstr("buffer_size"));
+        if (!NIL_P(buf_size)) {
+            buffer_size = NUM2INT(buf_size);
+        }
+    }
+    g_buffer = malloc(sizeof(char) * buffer_size);
+
+    initialized = 1;
+
+    return Qnil;
+}
 
 void Init_pogocache_ruby(void) {
+    VALUE mPogocache = rb_define_module("Pogocache");
+    rb_define_module_function(mPogocache, "initialize!", initialize_extension, 1);
+
 }

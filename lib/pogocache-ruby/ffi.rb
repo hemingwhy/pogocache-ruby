@@ -1,9 +1,10 @@
 module Pogocache::FFI
   extend ::FFI::Library
 
-  ffi_lib File.dirname(__FILE__) + "/../pogocache_ruby.so"
+  Pogocache::Platform.check_compatibility!
+  ffi_lib File.dirname(__FILE__) + "/../#{Pogocache::Platform.library_name}"
 
-  attach_function :pogocache_new, [:int], :pointer
+  attach_function :pogocache_custom_new, [:bool, :bool, :bool, :bool, :bool, :int, :int, :uint64_t], :pointer
   attach_function :pogocache_free, [:pointer], :void
   attach_function :pogocache_custom_sweep, [:pointer], :pointer
 

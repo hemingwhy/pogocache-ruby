@@ -3,11 +3,10 @@
 module Pogocache
   # Global configuration for pogocache
   class Configuration
-    attr_accessor :library_path, :max_memory, :shard_count
+    attr_accessor :shard_count, :buffer_size
 
     def initialize
-      @library_path = nil
-      @max_memory = nil
+      @buffer_size = 1024 * 4096
       @shard_count = 4096
     end
   end

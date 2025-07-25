@@ -2,7 +2,16 @@ class Pogocache::Cache
   include Enumerable
 
   def initialize(options = {})
-    @ptr = Pogocache::FFI.pogocache_new(options[:max_size] || 0)
+    @ptr = Pogocache::FFI.pogocache_custom_new(
+      options[:usecas] || false,
+      options[:nosixpack] || false,
+      options[:noevict] || false,
+      options[:allowshrink] || false,
+      options[:usethreadbatch] || false,
+      options[:nshards] || 65536,
+      options[:loadfactor] || 75,
+      options[:seed] || 0,
+    )
     raise MemoryError, "Failed to create cache instance" if @ptr.null?
 
     ObjectSpace.define_finalizer(self, self.class.finalizer(@ptr, Process.pid))

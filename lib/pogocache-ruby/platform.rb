@@ -36,12 +36,12 @@ module Pogocache
 
     def library_name
       @library_name ||= begin
-        base = "pogocache"
+        base = "pogocache_ruby"
         case os
         when "darwin"
-          "lib#{base}.dylib"
+          "#{base}.dylib"
         when "linux"
-          "lib#{base}.so"
+          "#{base}.so"
         else
           raise PlatformNotSupportedError, "Unsupported OS: #{os}"
         end
