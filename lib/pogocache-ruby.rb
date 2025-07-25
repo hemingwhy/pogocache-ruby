@@ -2,7 +2,7 @@
 
 require "ffi"
 require_relative "pogocache_ruby"
-Pogocache.initialize!(buffer_size: 4096*1014)
+Pogocache.initialize!(buffer_size: 4096 * 1014)
 require_relative "pogocache-ruby/version"
 require_relative "pogocache-ruby/platform"
 require_relative "pogocache-ruby/ffi"

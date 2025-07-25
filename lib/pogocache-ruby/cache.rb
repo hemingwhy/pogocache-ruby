@@ -10,7 +10,7 @@ class Pogocache::Cache
       options[:usethreadbatch] || false,
       options[:nshards] || 65536,
       options[:loadfactor] || 75,
-      options[:seed] || 0,
+      options[:seed] || 0
     )
     raise MemoryError, "Failed to create cache instance" if @ptr.null?
 
