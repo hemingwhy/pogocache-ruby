@@ -20,7 +20,7 @@ It does not free the lock before any operation.
 ## Usage
 
 ```
-  [...]
+bundle add pogocache-ruby
 ```
 
 ## Todos

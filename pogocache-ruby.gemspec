@@ -8,12 +8,13 @@ Gem::Specification.new do |spec|
   spec.authors = ["heming"]
   spec.email = ["git@heming.dev"]
 
-  spec.summary = "Bindings for pogocache"
-  spec.description = "Bindings for pogocache"
+  spec.summary = "An efficient in-memory cache"
+  spec.description = "Leveraging https://github.com/tidwall/pogocache as a C extension."
   spec.homepage = "https://github.com/hemingwhy/pogocache-ruby"
   spec.required_ruby_version = ">= 3.2.0"
+  spec.license = "AGPL-3.0-only"
 
-  spec.metadata["allowed_push_host"] = nil
+  spec.metadata["allowed_push_host"] = "https://rubygems.org"
   spec.metadata["homepage_uri"] = spec.homepage
   spec.metadata["source_code_uri"] = spec.homepage
   spec.metadata["changelog_uri"] = "#{spec.homepage}/change"
@@ -31,7 +32,7 @@ Gem::Specification.new do |spec|
   spec.executables = spec.files.grep(%r{\Aexe/}) { |f| File.basename(f) }
   spec.require_paths = ["lib"]
 
-  spec.extensions = ["ext/pogocache-ruby/extconf.rb"]
+  spec.extensions = ["ext/pogocache_ruby/extconf.rb"]
 
   # Uncomment to register a new dependency of your gem
   # spec.add_dependency "example-gem", "~> 1.0"
