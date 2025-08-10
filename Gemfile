@@ -7,6 +7,7 @@ gemspec
 
 # Additional development dependencies
 group :development do
+  gem "debug", "~> 1.11"
   gem "pry"
   gem "pry-byebug"
   gem "guard"
@@ -18,5 +19,3 @@ end
 platforms :ruby do
   gem "rake-compiler", "~> 1.2"
 end
-
-gem "debug", "~> 1.11"

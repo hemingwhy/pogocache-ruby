@@ -18,9 +18,7 @@ class Pogocache::Cache
     end
   end
 
-  def delete(key)
-    @extension.delete(encode(key))
-  end
+  def delete(key) = @extension.delete(encode(key))
 
   def [](key)
     get(key)
@@ -37,22 +35,37 @@ class Pogocache::Cache
     block&.call
   end
 
-  def count
-    @extension.count
-  end
-  alias_method(:size, :count)
-
-  def bytesize
-    @extension.size
-  end
-
-  def clear
-    @extension.clear
+  def increment(key)
+    value = get(key)&.to_i
+    if value
+      set(key, value + 1)
+      value + 1
+    else
+      set(key, 1)
+      1
+    end
   end
 
-  def sweep
-    @extension.sweep
+  def decrement(key)
+    value = get(key)&.to_i
+    if value
+      set(key, value - 1)
+      value - 1
+    else
+      set(key, 1)
+      1
+    end
   end
+
+  def count = @extension.count
+
+  def size = count
+
+  def bytesize = @extension.size
+
+  def clear = @extension.clear
+
+  def sweep = @extension.sweep
 
   def each(opts = {}, &block)
     if block_given?
@@ -70,11 +83,31 @@ class Pogocache::Cache
 
   def nshards = @extension.nshards
 
+  def cleanup(options = {}) = @extension.sweep
+
+  def prune(options = {})
+  end
+
+  def pruning?
+    false
+  end
+
+  def delete_matched(matcher, options = {})
+    @extension.each do |e|
+      if decode(e[:key]).to_s.match(matcher)
+        Pogocache::ITER_DELETE # standard:disable Lint/Void
+      else
+        Pogocache::ITER_CONTINUE # standard:disable Lint/Void
+      end
+    end
+  end
+
+  def synchronize
+  end
+
   private
 
-  def encode(obj)
-    Marshal.dump(obj)
-  end
+  def encode(obj) = Marshal.dump(obj)
 
   def decode(str)
     return nil if str.nil? || str.empty?

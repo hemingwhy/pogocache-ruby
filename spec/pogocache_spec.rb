@@ -154,22 +154,86 @@ RSpec.describe Pogocache::Cache do
   end
 
   describe ".entry" do
-    it "has all the keys" do
+    it "contains all the data provided by pogogache" do
       cache = described_class.new
       cache[:test] = {an: :entry}
       entry = cache.entry(:test)
       expect(entry.keys).to match_array(%i[cas expires flags key shard time value])
     end
+
+    it "decodes key and value" do
+      cache = described_class.new
+      cache[:test] = {an: :entry}
+      entry = cache.entry(:test)
+      expect(entry[:key]).to eq(:test)
+      expect(entry[:value]).to eq({an: :entry})
+    end
+
+    it "returns expected data" do
+      cache = described_class.new
+      cache.set(:test, {a: :value})
+      entry = cache.entry(:test)
+      expect(entry).to include({cas: 0, expires: 0, flags: 0, key: :test, value: {a: :value}})
+    end
   end
 
   describe "configuration" do
+    after do
+      Pogocache.configuration.default_opts = {}
+    end
+
     it "works" do
       Pogocache.configure do
-        it.default_opts = {nshards: 1010}
+        it.default_opts = {
+          usecas: true, # enable the compare-and-store operation
+          nosixpac: true, # disable sixpack key compression
+          noevict: true, # disable all eviction
+          allowshrink: true, # allow hashmap shrinking
+          usethreadbatch: true, # use a thread local batch (non-reentrant)
+          nshards: 1010, # default 65536
+          loadfactor: 90, # default 75%
+          seed: 420 # custom hash seed, default zero
+        }
       end
 
       cache = described_class.new
       expect(cache.nshards).to eq(1010)
+    end
+  end
+
+  describe "Cache interface" do
+    it "#pruning? returns false" do
+      cache = described_class.new
+      expect(cache.pruning?).to eq(false)
+    end
+
+    it "#delete_matched" do
+      cache = described_class.new
+      cache.set("name1", "Ada")
+      cache.set("last_name1", "Lovelace")
+      cache.set("name2", "Adam")
+      cache.set("last_name2", "Turing")
+      cache.set("last_name3", "Dijkstra")
+      cache.delete_matched(/last/)
+      expect(cache.count).to eq(2)
+    end
+
+    it "#increment" do
+      cache = described_class.new
+      expect(cache.increment(:test)).to eq(1)
+      expect(cache.increment(:test)).to eq(2)
+      expect(cache.increment(:test)).to eq(3)
+      cache[:test] = 10
+      expect(cache.increment(:test)).to eq(11)
+    end
+
+    it "#decrement" do
+      cache = described_class.new
+      expect(cache.decrement(:test)).to eq(1)
+      expect(cache.decrement(:test)).to eq(0)
+      expect(cache.decrement(:test)).to eq(-1)
+      cache[:test] = 10
+      expect(cache.decrement(:test)).to eq(9)
     end
   end
 end
