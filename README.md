@@ -36,11 +36,11 @@ cache["value1"]
 # => "string 1"
 ```
 
-See [./spec/pogocache_spec.rb] and [./ext/pogocache_ruby/pogocache.h] for details.
+See [pogocache_spec.rb](spec/pogocache_spec.rb) and [pogocache.h](ext/pogocache_ruby/pogocache.h) for details.
 
 ## Benchmark
 
-[./benchmark.rb]
+[benchmark.rb](benchmark.rb)
 
 ```
 Benchmarking WRITE performance (100000 keys)...
