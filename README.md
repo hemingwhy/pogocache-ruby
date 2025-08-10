@@ -2,7 +2,7 @@
 
 Use [pogocache](https://github.com/tidwall/pogocache) as an in-memory store in Ruby.
 This gem embeds pogocache as a C extension and provides the class `Pogocache::Cache`to interact with it.
-The goal is to provide a faster, more lightweight alternative to `ActiveSupport::Cache::MemoryStore.
+The goal is to provide a faster, more lightweight alternative to `ActiveSupport::Cache::MemoryStore`.
 The state of this project is pre release but functional. Feedback is welcome.
 
 ## Features
@@ -63,3 +63,9 @@ Calculating -------------------------------------
                         50.000  strings (     0.000  retained)
 
 ```
+
+## License
+
+This gem uses [Pogocache](https://pogocache.com). Pogocache is free & open source software released under the terms of the AGPL license. The Pogocache source code was written and copyrighted by [Polypoint Labs, LLC](https://polypointlabs.com/). 
+
+For alternative licensing options, please contact them at licensing@polypointlabs.com.
